@@ -40,8 +40,8 @@ public class OrderController {
 			return ResponseEntity.notFound().build();
 		}
 		UserOrder order = UserOrder.createFromCart(user.getCart());
-		log.info("submitting order for {}",order.getUser());
 		orderRepository.save(order);
+		log.info("submitting order for {}",order.getUser());
 		return ResponseEntity.ok(order);
 	}
 	
@@ -49,6 +49,7 @@ public class OrderController {
 	public ResponseEntity<List<UserOrder>> getOrdersForUser(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		if(user == null) {
+			log.error("Error finding {}.  Cannot find orders.",username);
 			return ResponseEntity.notFound().build();
 		}
 		return ResponseEntity.ok(orderRepository.findByUser(user));
