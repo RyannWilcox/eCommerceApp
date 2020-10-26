@@ -10,6 +10,8 @@ import org.junit.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.Optional;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
@@ -33,7 +35,7 @@ public class UserControllerTest {
   }
 
   @Test
-  public void createUserHappyPath() throws Exception {
+  public void create_User_Happy_Path() throws Exception {
     when(encoder.encode("testPassword")).thenReturn("thisIsHashed");
 
     CreateUserRequest request = new CreateUserRequest();
@@ -53,4 +55,68 @@ public class UserControllerTest {
     assertEquals("test",user.getUsername());
     assertEquals("thisIsHashed",user.getPassword());
   }
+
+  @Test
+  public void create_User_Invalid_Password() throws Exception {
+    CreateUserRequest request = new CreateUserRequest();
+    request.setUsername("test");
+    request.setPassword("password");
+    request.setConfirmPassword("notThePassword");
+
+    final ResponseEntity<User> response = userController.createUser(request);
+    assertEquals(400, response.getStatusCodeValue());
+  }
+
+  @Test
+  public void find_User_By_Id() throws Exception {
+    User user = new User();
+    long id = 1L;
+    user.setId(id);
+    user.setUsername("user");
+    user.setPassword("password");
+    when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+    final ResponseEntity<User> response = userController.findById(id);
+
+    User theUser = response.getBody();
+    assertNotNull(theUser);
+    assertEquals(200,response.getStatusCodeValue());
+    assertEquals("user",theUser.getUsername());
+    assertEquals("password",theUser.getPassword());
+  }
+
+  @Test
+  public void find_User_By_Id_Not_Found() throws Exception {
+    final ResponseEntity<User> response = userController.findById(1L);
+    assertEquals(404,response.getStatusCodeValue());
+  }
+
+  @Test
+  public void find_User_By_Name() throws Exception {
+    User user = new User();
+    long id = 1L;
+    String userName = "user";
+    user.setId(id);
+    user.setUsername(userName);
+    user.setPassword("password");
+    when(userRepository.findByUsername(userName)).thenReturn(user);
+
+    final ResponseEntity<User> response = userController.findByUserName(userName);
+
+    User theUser = response.getBody();
+    assertNotNull(theUser);
+    assertEquals(200,response.getStatusCodeValue());
+    assertEquals("user",theUser.getUsername());
+    assertEquals("password",theUser.getPassword());
+
+
+  }
+
+  @Test
+  public void find_User_By_Name_Not_Found() throws Exception {
+    final ResponseEntity<User> response = userController.findByUserName("IDoNotExist");
+    assertEquals(404,response.getStatusCodeValue());
+  }
+
+
 }
